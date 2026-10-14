@@ -23,7 +23,8 @@ InfoVarde, Norveç merkezli Infoskjermen / Pintomind sisteminden ilham alan, "Te
 
 * **InfoVarde Skjerm (TV Player):** Ortak alanlardaki televizyonlarda çalışan tam ekran, fare/klavye gerektirmeyen döngüsel slayt oynatıcı.
 * **InfoVarde Mobil (Varde Feed):** QR kodla açılan, kayıt gerektirmeyen dikey haber akışı ve etkinlik takvimi.
-* **InfoVarde Studio (CMS Panel):** Görevlilerin ve tercümanların içerik girdiği, zamanlama yaptığı ve ekranları yönettiği web paneli.
+* **InfoVarde Studio (CMS Panel):** Görevlilerin ve yöneticilerin içerik girdiği, zamanlama yaptığı ve ekranları yönettiği web paneli.
+* **InfoVarde AI Tolk (Yapay Zeka Tercüme ve Ses Motoru):** Norveççe/İngilizce girilen tek bir duyuruyu insani/hukuki bağlamı koruyarak saniyeler içinde 10+ dile çeviren ve her dil için doğal insan sesinde ses kaydı (Neural Audio) üreten akıllı çeviri stüdyosu.
 
 ---
 
@@ -100,26 +101,32 @@ InfoVarde, Norveç merkezli Infoskjermen / Pintomind sisteminden ilham alan, "Te
 | :--- | :--- | :--- |
 | `id` | INTEGER PRIMARY KEY AUTOINCREMENT | Benzersiz ID |
 | `announcement_id` | INTEGER NOT NULL | Duyuru ID'si (Foreign Key, Cascade Delete) |
-| `lang_code` | TEXT NOT NULL | `en`, `no`, `ar`, `fa`, `tr`, `el` |
+| `lang_code` | TEXT NOT NULL | `en`, `no`, `uk`, `ar`, `fa`, `so`, `ti`, `tr`, `el`, `ru` |
 | `title` | TEXT NOT NULL | Seçili dildeki başlık |
 | `content` | TEXT NOT NULL | Seçili dildeki açıklama / gövde metni |
+| `audio_url` | TEXT | Bu dile özel üretilmiş veya yüklenmiş doğal ses kaydı URL'i |
 | `is_rtl` | INTEGER DEFAULT 0 | 1 = Sağdan Sola (`ar`, `fa`), 0 = Soldan Sağa |
 
 ---
 
-## 5. API ve Server-Sent Events (SSE) Protokolü
+## 5. API, Server-Sent Events (SSE) ve AI Entegrasyon Protokolü
 
 ### 5.1. REST API
 * `GET /api/channels`: Tüm kanalları listeler.
 * `POST /api/channels`: Yeni kanal oluşturur (benzersiz kodla).
 * `GET /api/channels/:code`: Belirli bir kanalın ayarlarını getirir.
 * `GET /api/channels/:code/feed?lang=en`: Belirli bir dildeki aktif duyuruları ve etkinlikleri döner.
-* `POST /api/announcements`: Yeni duyuru ekler (tüm dil çevirileriyle birlikte).
+* `POST /api/announcements`: Yeni duyuru ekler (tüm dil çevirileri ve sesleriyle birlikte).
 * `PUT /api/announcements/:id`: Duyuruyu günceller.
 * `DELETE /api/announcements/:id`: Duyuruyu siler.
 * `POST /api/channels/:code/broadcast-alert`: Acil durum flaş uyarısı tetikler.
 
-### 5.2. Server-Sent Events (SSE) Canlı Yayın
+### 5.2. InfoVarde AI Tolk (Yapay Zeka Tercüme ve Ses Servisleri)
+* `POST /api/ai/translate`: Norveççe veya İngilizce metni alır; mülteci/iltica terminolojisi sözlüğüyle (UDI, NAV, Mottak, sağlık) hedef dillere (Arapça, Ukraynaca, Somalice, Darice/Farsça, Tigrinya vb.) insani bağlama uygun olarak çevirir.
+* `POST /api/ai/generate-voice`: Çevrilen metin için ilgili dilde doğal aksanlı insan sesi (Neural Audio) sentezler ve `.mp3` ses dosyası üretir.
+* `POST /api/ai/transcribe`: Görevlinin mikrofona konuştuğu Norveççe ses kaydını yazıya döker (Whisper), böylece tek tuşla sesli anons girişi yapılabilir.
+
+### 5.3. Server-Sent Events (SSE) Canlı Yayın
 * **Endpoint:** `GET /api/channels/:code/stream`
 * **Olaylar (Events):**
   * `connected`: İlk bağlantı kurulduğunda onay mesajı.
@@ -157,7 +164,49 @@ InfoVarde, Norveç merkezli Infoskjermen / Pintomind sisteminden ilham alan, "Te
 
 ---
 
-## 7. Görsel Kimlik ve Tasarım Sistemi (Design Tokens)
+---
+
+## 7. InfoVarde AI Tolk: Çok Dilli Tercüme ve Sesli Anlatım Motoru (Mottak Değer & İş Modeli)
+
+### 7.1. Mottak ve UDI Pazarı İçin Değer Önerisi (Büyük Düşünme & Finansal Model)
+Norveç'te (ve genel olarak Avrupa mülteci kabul sistemlerinde) UDI (Norveç Göçmenlik İdaresi), belediyeler (*kommune*) ve iltica kabul merkezlerinin (*asylmottak*) en büyük bütçe ve operasyon yüklerinden biri saatlik ücretleri **1.000 – 1.800 NOK** arasında değişen lisanslı tercümanlardır (*tolketjenester*).
+
+* **Mevcut Kriz:** Rutin ve günlük bilgilendirmeler (örneğin: doktor vizite saatleri, oda denetimleri, UDI iltica mülakatı çağrıları, otobüs saatleri, yangın tatbikatları, hijyen ve çamaşırhane kuralları, çocuk kreş takvimi) için her seferinde tercüman çağırmak bütçeyi tüketmekte; personelin çeviri araçlarıyla kopyala-yapıştır yapması ise hem hatalara hem de okuma-yazma bilmeyen mültecilerin bilgiden mahrum kalmasına yol açmaktadır.
+* **InfoVarde AI Tolk Çözümü:** Mottak yöneticisi sadece tek bir dilde (Norveççe veya İngilizce) duyuru yazar veya mikrofonla ses kaydı alır. Sistem 10 saniye içinde insani/hukuki bağlamı koruyarak bu duyuruyu 10+ dile çevirir ve her dil için **akıcı, doğal insan sesinde ses kaydı** üretir.
+* **Tasarruf ve SaaS Satış Gücü:** Bir mottak, aylık tercüman bütçesinin sadece %10'una InfoVarde lisansı alarak rutin duyuru ve bilgilendirme tercüme maliyetlerini %80 oranında düşürür. Bu özellik, InfoVarde'yi sıradan bir ekran yazılımından çıkarıp **Norveç ve Avrupa'daki kamu ve insani yardım ihalelerinde en çok aranan ve en yüksek kâr marjına sahip B2G/B2B platformu** haline getirir.
+
+### 7.2. Teknik Çeviri Mimarisi ve Terminoloji Prompt Motoru
+Standart makine çevirileri iltica ve kamu terminolojisinde kritik hatalar yapabilir. InfoVarde AI Tolk, bünyesinde yerel iltica sözlüğünü (*UDI, NAV, politiattest, mottakskontrakt, asylintervju, verge, D-nummer*) barındıran özel bir **Humanitarian AI Translation Prompt Pipeline** çalıştırır:
+
+1. **Desteklenen Öncelikli Diller:**
+   - 🇳🇴 Norveççe (Bokmål / Nynorsk) & 🇬🇧 İngilizce (Kaynak Diller)
+   - 🇺🇦 Ukraynaca (Mevcut en yoğun grup)
+   - 🇸🇾 🇮🇶 Arapça (Levant ve Modern Standart - Otomatik RTL)
+   - 🇦🇫 🇮🇷 Farsça / Darice / Peştuca (Otomatik RTL)
+   - 🇸🇴 Somalice
+   - 🇪🇷 Tigrinya (Eritre / Doğu Afrika)
+   - 🇹🇷 Türkçe & 🇷🇺 Rusça & 🇬🇷 Yunanca & 🇫🇷 Fransızca
+2. **Tek Tıkla Toplu Çeviri ve Önizleme (One-Click Broadcast Translation):**
+   - Panelde tek bir "AI ile Tüm Dillere Çevir ve Seslendir" butonu.
+   - LLM (OpenAI / Claude / Gemini veya yerel modeller) tüm dil kartlarını JSON formatında eksiksiz ve kültürel nezaket kurallarına uygun biçimde oluşturur.
+   - Görevli isterse tek tek dilleri gözden geçirip küçük düzeltmeler yapabilir veya doğrudan onaylayabilir.
+
+### 7.3. Neural Voice Generator (Her Dil İçin Doğal İnsan Sesi)
+* Mülteci popülasyonunda eğitim imkanına erişememiş veya kendi dilinde okuma-yazma bilmeyen hatırı sayılır bir kitle bulunmaktadır.
+* Sistem, çevrilen her dil için yapay zeka ses sentezleme motoru (Neural Text-to-Speech / Edge-TTS / OpenAI Audio) aracılığıyla o dilin ana dil konuşuru tonunda akıcı bir `.mp3` ses kaydı üretir.
+* Bu ses kaydı `announcement_translations.audio_url` alanına otomatik bağlanır. Mobil kullanıcı tek bir "Dinle" (Listen) ikonuna dokunarak anonsu kendi ana dilinde berrak bir sesle dinler.
+
+### 7.4. Voice-to-Voice Hızlı Acil Anons (Mottaktan Cebe 30 Saniyede Sesli İlan)
+* **Akış:** Mottak nöbetçi memuru mobil CMS'ten mikrofon butonuna basar ve Norveççe konuşur: *"Dikkat, yarın sabah saat 09:00'da A Blokta elektrik kesintisi olacaktır."*
+* **İşlem:**
+  1. Ses dosyası `Whisper` ile anında metne dökülür.
+  2. AI motoru metni 10 dile çevirir.
+  3. AI ses motoru 10 dilde ses dosyalarını üretir.
+  4. SSE ile tüm TV ekranlarına ve cep telefonlarına anında hem yazılı hem sesli olarak servis edilir.
+
+---
+
+## 8. Görsel Kimlik ve Tasarım Sistemi (Design Tokens)
 
 * **Logo:** Üst üste dengelenmiş 3 İskandinav taşı (*Varde*). En üst taşın üzerinde turuncu yol gösterici patika işareti.
 * **Renk Paleti:**
@@ -169,21 +218,24 @@ InfoVarde, Norveç merkezli Infoskjermen / Pintomind sisteminden ilham alan, "Te
   - `Polar White (Metin)`: `#F8FAFC`
   - `Slate Muted (İkincil Metin)`: `#94A3B8`
 * **Yazı Tipleri:**
-  - Latin / Grek: `Plus Jakarta Sans` veya `Inter`
+  - Latin / Grek / Kiril: `Plus Jakarta Sans` veya `Inter`
   - Arapça / Farsça (RTL): `Tajawal` veya `Noto Sans Arabic`
 
 ---
 
-## 8. Doğrulama ve Test Stratejisi
+## 9. Doğrulama ve Test Stratejisi
 
 1. **Birim & API Testleri:**
    - Kanalların ve çok dilli duyuruların doğru kaydedilmesi, güncellenmesi ve silinmesi.
    - Dil koduna göre filtrelenmiş verinin doğruluğu ve RTL bayraklarının test edilmesi.
-2. **Server-Sent Events (SSE) Canlı Testi:**
-   - Admin panelinden yeni duyuru yayınlandığında TV ve mobil ekranların otomatik güncellenmesinin doğrulanması.
-3. **Çevrimdışı (Offline) Dayanıklılık Testi:**
+2. **AI Tolk Çeviri ve Ses Testi:**
+   - Örnek bir Norveççe duyurunun (sağlık/hukuk) AI servisi ile 6+ dile çevrilmesi, özel iltica terimlerinin doğruluğu ve üretilen ses dosyalarının oynatılabilmesi.
+3. **Server-Sent Events (SSE) Canlı Testi:**
+   - Admin panelinden yeni duyuru yayınlandığında TV ve mobil ekranların anında güncellenmesinin doğrulanması.
+4. **Çevrimdışı (Offline) Dayanıklılık Testi:**
    - Ağ bağlantısı kesildiğinde TV ekranının kararmadan mevcut slaytları döngüde oynatmaya devam ettiğinin doğrulanması.
-4. **Çok Dilli & RTL Arayüz Doğrulaması:**
+5. **Çok Dilli & RTL Arayüz Doğrulaması:**
    - Arapça ve Farsça dillerinde kartların, butonların ve tipografinin görsel bütünlüğünün doğrulanması.
-5. **Ses Oynatıcı & TTS Testi:**
-   - Yüklenen ses kaydının ve Web Speech TTS motorunun hatasız çalışmasının doğrulanması.
+6. **Ses Oynatıcı & TTS Testi:**
+   - Üretilen AI ses kayıtlarının ve Web Speech TTS motorunun mobil akışta hatasız çalışmasının doğrulanması.
+
