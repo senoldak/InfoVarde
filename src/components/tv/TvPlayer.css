@@ -1,0 +1,323 @@
+/* src/components/tv/TvPlayer.css */
+.tv-container {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(circle at 50% 20%, #162032 0%, #0B1120 70%, #060913 100%);
+  color: #F8FAFC;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+
+/* TV Header Bar */
+.tv-header {
+  height: 96px;
+  padding: 0 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(20px);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.08);
+  z-index: 20;
+}
+
+.tv-logo-area {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.tv-brand {
+  font-size: 2.2rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  background: linear-gradient(135deg, #FFFFFF 30%, #CBD5E1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.tv-channel-tag {
+  background: rgba(249, 115, 22, 0.15);
+  color: #F97316;
+  border: 1px solid rgba(249, 115, 22, 0.4);
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.tv-location-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #94A3B8;
+  font-size: 1.15rem;
+  font-weight: 500;
+}
+
+/* TV Main Content Stage */
+.tv-stage {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 60px 110px;
+  overflow: hidden;
+}
+
+/* Slide Transition Animations */
+.tv-slide-wrapper {
+  width: 100%;
+  max-width: 1680px;
+  height: 100%;
+  max-height: 820px;
+  display: flex;
+  animation: slideFadeIn 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.tv-slide-card {
+  width: 100%;
+  height: 100%;
+  background: rgba(30, 41, 59, 0.65);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  border-radius: 32px;
+  box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.7);
+  padding: 56px 64px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+
+.tv-slide-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: linear-gradient(90deg, #F97316, #06B6D4, #10B981);
+}
+
+.tv-slide-card.emergency-border {
+  border-color: rgba(239, 68, 68, 0.8);
+  box-shadow: 0 0 80px rgba(239, 68, 68, 0.3);
+}
+
+.tv-slide-card.emergency-border::before {
+  background: #EF4444;
+}
+
+/* Slide Typography */
+.tv-slide-title {
+  font-size: 3.6rem;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  color: #FFFFFF;
+  margin-bottom: 24px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.tv-slide-content {
+  font-size: 2.1rem;
+  line-height: 1.45;
+  color: #E2E8F0;
+  font-weight: 400;
+  max-width: 1200px;
+}
+
+/* Multilingual Second Language Translation Preview */
+.tv-secondary-translation {
+  margin-top: 36px;
+  padding: 24px 32px;
+  background: rgba(11, 17, 32, 0.6);
+  border-left: 6px solid #06B6D4;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tv-secondary-translation[dir="rtl"] {
+  border-left: none;
+  border-right: 6px solid #06B6D4;
+}
+
+.tv-secondary-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #67E8F9;
+}
+
+.tv-secondary-body {
+  font-size: 1.6rem;
+  color: #CBD5E1;
+  line-height: 1.4;
+}
+
+/* Metadata Bar on TV Slide */
+.tv-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+}
+
+.tv-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 12px 22px;
+  border-radius: 14px;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #F8FAFC;
+}
+
+/* TV Footer Bar & Dynamic Progress */
+.tv-footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 96px;
+  padding: 0 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(11, 17, 32, 0.85);
+  backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 20;
+}
+
+.tv-progress-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.tv-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #F97316 0%, #FB923C 100%);
+  transition: width 0.1s linear;
+}
+
+/* Offline Pill */
+.tv-offline-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(239, 68, 68, 0.2);
+  color: #FCA5A5;
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+/* QR Code Corner Widget */
+.tv-qr-box {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  padding: 10px 18px;
+}
+
+.tv-qr-image {
+  width: 68px;
+  height: 68px;
+  border-radius: 8px;
+  background: #FFFFFF;
+  padding: 4px;
+}
+
+.tv-qr-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.tv-qr-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.tv-qr-subtitle {
+  font-size: 0.85rem;
+  color: #94A3B8;
+}
+
+/* Emergency Takeover Overlay */
+.tv-emergency-takeover {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: #7F1D1D;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px;
+  text-align: center;
+  animation: emergencyPulse 1.2s infinite alternate;
+}
+
+@keyframes emergencyPulse {
+  0% {
+    background: #7F1D1D;
+  }
+  100% {
+    background: #991B1B;
+  }
+}
+
+.tv-emergency-title {
+  font-size: 5.5rem;
+  font-weight: 900;
+  color: #FEF2F2;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 24px;
+  margin-bottom: 24px;
+  text-shadow: 0 4px 30px rgba(0, 0, 0, 0.6);
+}
+
+.tv-emergency-body {
+  font-size: 2.8rem;
+  color: #FEE2E2;
+  max-width: 1400px;
+  line-height: 1.35;
+  font-weight: 600;
+}

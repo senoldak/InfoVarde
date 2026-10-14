@@ -1,12 +1,13 @@
 import React from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
+import TvPlayer from './components/tv/TvPlayer.jsx';
 
 export default function App() {
   return (
     <div className="min-h-screen bg-[#0B1120] text-[#F8FAFC]">
       <Routes>
         <Route path="/" element={<PortalPlaceholder />} />
-        <Route path="/tv/:code" element={<TvPlaceholder />} />
+        <Route path="/tv/:code" element={<TvPlayer />} />
         <Route path="/m/:code" element={<MobilePlaceholder />} />
         <Route path="/admin" element={<AdminPlaceholder />} />
         <Route path="*" element={<NotFound />} />
