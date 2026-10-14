@@ -25,6 +25,7 @@ InfoVarde, Norveç merkezli Infoskjermen / Pintomind sisteminden ilham alan, "Te
 * **InfoVarde Mobil (Varde Feed):** QR kodla açılan, kayıt gerektirmeyen dikey haber akışı ve etkinlik takvimi.
 * **InfoVarde Studio (CMS Panel):** Görevlilerin ve yöneticilerin içerik girdiği, zamanlama yaptığı ve ekranları yönettiği web paneli.
 * **InfoVarde AI Tolk (Yapay Zeka Tercüme ve Ses Motoru):** Norveççe/İngilizce girilen tek bir duyuruyu insani/hukuki bağlamı koruyarak saniyeler içinde 10+ dile çeviren ve her dil için doğal insan sesinde ses kaydı (Neural Audio) üreten akıllı çeviri stüdyosu.
+* **InfoVarde Lifeline (Nødsamband - Acil İletişim & Yardım Masası):** Mültecilerin SIM kart, kontör veya telefon hattı olmadan kamp Wi-Fi'ı üzerinden nöbetçi memurlarla ve AI asistanla doğrudan konuşabileceği/yazışabileceği, WebRTC tabanlı, KVKK/GDPR uyumlu (sıfır kişisel veri, uçucu/ephemeral) acil yardım hattı.
 
 ---
 
@@ -107,6 +108,10 @@ InfoVarde, Norveç merkezli Infoskjermen / Pintomind sisteminden ilham alan, "Te
 | `audio_url` | TEXT | Bu dile özel üretilmiş veya yüklenmiş doğal ses kaydı URL'i |
 | `is_rtl` | INTEGER DEFAULT 0 | 1 = Sağdan Sola (`ar`, `fa`), 0 = Soldan Sağa |
 
+### 4.4. `lifeline_sessions` & `lifeline_messages` (KVKK/GDPR Uyumlu Uçucu İletişim)
+* **`lifeline_sessions`**: `id`, `session_token` (Kriptografik rastgele token, sıfır PII), `channel_id`, `room_tag` (Opsiyonel oda no, örn: "Blok A - 104"), `status` (`ai_active`, `officer_waiting`, `officer_connected`, `closed`), `created_at`, `expires_at` (TTL: Oturum kapandıktan 1 saat sonra otomatik imha).
+* **`lifeline_messages`**: `id`, `session_id`, `sender_type` (`resident`, `ai`, `officer`), `lang_code`, `original_text`, `translated_text` (Canlı tercüme edilmiş metin), `created_at`.
+
 ---
 
 ## 5. API, Server-Sent Events (SSE) ve AI Entegrasyon Protokolü
@@ -132,6 +137,15 @@ InfoVarde, Norveç merkezli Infoskjermen / Pintomind sisteminden ilham alan, "Te
   * `connected`: İlk bağlantı kurulduğunda onay mesajı.
   * `feed_updated`: Yeni bir duyuru eklendiğinde, güncellendiğinde veya silindiğinde istemcilere son veriyi anında yeniden çekme sinyali gönderir.
   * `emergency_alert`: Acil durum anında normal döngüyü kesen acil durum verisini taşır.
+  * `lifeline_call_incoming`: Nöbetçi memurun ekranına düşen yeni yardım çağrısı bildirimi.
+
+### 5.4. InfoVarde Lifeline (Acil Yardım, Canlı Çevirili Mesajlaşma & WebRTC Sesli Görüşme)
+* `POST /api/lifeline/session`: Giriş/kayıt gerektirmeden anonim oturum başlatır.
+* `POST /api/lifeline/chat/ai`: 24/7 AI İlk Yardım Asistanına ana dilde soru sorar.
+* `POST /api/lifeline/escalate`: Oturumu nöbetçi memur canlı masasına aktarır.
+* `POST /api/lifeline/chat/message`: Canlı sohbette mesaj gönderir (AI otomatik olarak mültecinin dilini Norveççe'ye, memurun Norveççesini mültecinin diline çevirir).
+* `GET /api/lifeline/sessions`: Nöbetçi memur ekranındaki aktif çağrı ve mesaj kuyruğu.
+* `WebSocket /api/lifeline/webrtc`: Mülteci telefonu ile nöbetçi memur tarayıcısı arasında SIM kart ve kontör gerektirmeyen, kamp Wi-Fi'ı üzerinden şifreli WebRTC sesli görüşme sinyalleşmesi (Signal/P2P mantığı).
 
 ---
 
@@ -206,7 +220,54 @@ Standart makine çevirileri iltica ve kamu terminolojisinde kritik hatalar yapab
 
 ---
 
-## 8. Görsel Kimlik ve Tasarım Sistemi (Design Tokens)
+---
+
+## 8. InfoVarde Lifeline (Nødsamband): KVKK/GDPR Uyumlu Acil Durum İletişimi, WebRTC Sesli Görüşme ve AI Asistanı
+
+### 8.1. İnsani İhtiyaç ve Saha Gerçekliği
+Mültecilerin ve sığınmacıların büyük bölümü kabul merkezlerine vardıklarında yerel SIM kartına, telefon kontörüne veya uluslararası roaming paketine sahip değildir. Mottak veya kampın ücretsiz Wi-Fi ağına bağlı olsalar bile, gece yarısı yaşanabilecek acil durumlarda (ani çocuk rahatsızlığı, yangın, ısınma arızası, güvenlik tehdidi, hukuki panik) mottak nöbetçi memuruna (*mottaksvakt*) veya sağlık personeline normal telefon hattı üzerinden ulaşamazlar.
+
+WhatsApp gibi ticari platformlar ise personelin kişisel telefon numaralarını ifşa etmekte ve sığınmacıların hassas kimlik verilerini güvence altına alamamaktadır. InfoVarde Lifeline, **bir WhatsApp alternatifi olmak için değil; kamp içi acil durum yardım hattını sıfır maliyet ve tam gizlilikle sunmak** için geliştirilmiştir.
+
+### 8.2. KVKK / GDPR Uyumlu Gizlilik Mimarisi (Privacy by Design & Zero-PII)
+* **Sıfır Kişisel Veri (Zero-PII):** Kullanıcıdan telefon numarası, ad-soyad, kimlik numarası veya e-posta ASLA istenmez. Cihaz yerelinde rastgele bir kriptografik oturum anahtarı (`session_token`) üretilir. İsteğe bağlı olarak sadece personelin hızlı müdahalesi için yer/oda bilgisi ("Blok B - Oda 204") girilebilir.
+* **Uçucu Veri Politikası (Ephemeral TTL & Right to be Forgotten):** 
+  - Acil durum görüşmesi tamamlandığında veya oturum kapatıldıktan 1 saat sonra tüm mesaj kayıtları veritabanından kalıcı olarak silinir.
+  - Hiçbir çerez (cookie), reklam izleyicisi veya üçüncü parti analitik aracı sisteme dahil edilmez.
+* **Signal Mantığı & Şifreli WebRTC Ses İletişimi:**
+  - Tarayıcılar arası doğrudan şifreli WebRTC (VoIP) ses kanalı kurulur.
+  - Ses akışı sunucuda ASLA kaydedilmez; görüşme kapandığı anda ses trafiği tamamen sonlanır.
+
+### 8.3. Çift Kademeli İletişim Akışı
+
+```
+  ┌─────────────────────────────────────────────────────────────┐
+  │                 Mülteci Mobil Ekranı (/m/:code)             │
+  │     - "Acil Yardım & Nöbetçi Hattı" Butonu                  │
+  │     - Kendi Ana Dilinde Yazma veya Ses Kaydı                │
+  └──────────────────────────────┬──────────────────────────────┘
+                                 │
+                 ┌───────────────┴───────────────┐
+                 ▼                               ▼
+  ┌─────────────────────────────┐ ┌─────────────────────────────┐
+  │ 1. Kademe: 24/7 AI Asistan  │ │ 2. Kademe: Canlı Nöbetçi    │
+  │ - Ana dilde anında yanıt    │ │ - Sesli WebRTC Wi-Fi Araması│
+  │ - Sağlık/Mottak rehberliği  │ │ - Çift Yönlü Canlı AI Çeviri│
+  │ - Çözülmezse memura aktar   │ │ - Norveççe <-> Arapça/vb.   │
+  └─────────────────────────────┘ └─────────────────────────────┘
+```
+
+1. **1. Kademe: 24/7 Çok Dilli AI Acil Asistanı:**
+   - Mülteci kendi dilinde sorusunu iletir: *"Bebeğimin ateşi çok yüksek, acil ilaç nereden alabilirim?"*
+   - AI asistan mottak sağlık protokollerine göre saniyeler içinde ana dilde ilk yönlendirmeyi yapar: *"Lütfen sakin olun. Nöbetçi sağlık görevlisine hemen haber veriyorum. A Blok 1. kattaki nöbetçi odasına geçebilirsiniz."*
+2. **2. Kademe: Nöbetçi Memura Aktarım ve Çift Yönlü Canlı Çeviri (Live Interpretation):**
+   - Mülteci "Nöbetçi Görevliye Bağlan" dediğinde nöbetçi personelin ekranında sesli alarm çalar.
+   - **Canlı Çift Dilli Sohbet:** Mülteci Arapça yazar, memur kendi ekranında anında Norveççe görür; memur Norveççe yazar, mülteci kendi ekranında anında Arapça görür! İki taraf da hiçbir dil engeli olmadan anlaşır.
+   - **WebRTC Sesli Arama (VoIP Lifeline):** SIM kart veya bakiye gerekmeden doğrudan tarayıcıdan tarayıcıya berrak sesli arama yapılır.
+
+---
+
+## 9. Görsel Kimlik ve Tasarım Sistemi (Design Tokens)
 
 * **Logo:** Üst üste dengelenmiş 3 İskandinav taşı (*Varde*). En üst taşın üzerinde turuncu yol gösterici patika işareti.
 * **Renk Paleti:**
@@ -223,19 +284,23 @@ Standart makine çevirileri iltica ve kamu terminolojisinde kritik hatalar yapab
 
 ---
 
-## 9. Doğrulama ve Test Stratejisi
+## 10. Doğrulama ve Test Stratejisi
 
 1. **Birim & API Testleri:**
    - Kanalların ve çok dilli duyuruların doğru kaydedilmesi, güncellenmesi ve silinmesi.
    - Dil koduna göre filtrelenmiş verinin doğruluğu ve RTL bayraklarının test edilmesi.
 2. **AI Tolk Çeviri ve Ses Testi:**
    - Örnek bir Norveççe duyurunun (sağlık/hukuk) AI servisi ile 6+ dile çevrilmesi, özel iltica terimlerinin doğruluğu ve üretilen ses dosyalarının oynatılabilmesi.
-3. **Server-Sent Events (SSE) Canlı Testi:**
+3. **Lifeline & WebRTC Gizlilik Testi:**
+   - Anonim oturum başlatma, AI acil sohbet akışı, nöbetçi memura aktarma ve çift dilli anlık çevirinin doğrulanması.
+   - WebRTC ses bağlantısının ve oturum sonlandığında mesajların kalıcı olarak silinmesinin (TTL) doğrulanması.
+4. **Server-Sent Events (SSE) Canlı Testi:**
    - Admin panelinden yeni duyuru yayınlandığında TV ve mobil ekranların anında güncellenmesinin doğrulanması.
-4. **Çevrimdışı (Offline) Dayanıklılık Testi:**
+5. **Çevrimdışı (Offline) Dayanıklılık Testi:**
    - Ağ bağlantısı kesildiğinde TV ekranının kararmadan mevcut slaytları döngüde oynatmaya devam ettiğinin doğrulanması.
-5. **Çok Dilli & RTL Arayüz Doğrulaması:**
+6. **Çok Dilli & RTL Arayüz Doğrulaması:**
    - Arapça ve Farsça dillerinde kartların, butonların ve tipografinin görsel bütünlüğünün doğrulanması.
-6. **Ses Oynatıcı & TTS Testi:**
+7. **Ses Oynatıcı & TTS Testi:**
    - Üretilen AI ses kayıtlarının ve Web Speech TTS motorunun mobil akışta hatasız çalışmasının doğrulanması.
+
 
