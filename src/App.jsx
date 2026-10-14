@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
 import TvPlayer from './components/tv/TvPlayer.jsx';
+import MobileFeed from './components/mobile/MobileFeed.jsx';
 
 export default function App() {
   return (
@@ -8,7 +9,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<PortalPlaceholder />} />
         <Route path="/tv/:code" element={<TvPlayer />} />
-        <Route path="/m/:code" element={<MobilePlaceholder />} />
+        <Route path="/m/:code" element={<MobileFeed />} />
         <Route path="/admin" element={<AdminPlaceholder />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
