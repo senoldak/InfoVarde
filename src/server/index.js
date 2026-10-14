@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { initDatabase } from './db.js';
 import channelRoutes from './routes/channels.js';
 import announcementRoutes from './routes/announcements.js';
+import aiRoutes from './routes/ai.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -24,6 +25,7 @@ export function createServer() {
   // API Routes
   app.use('/api/channels', channelRoutes);
   app.use('/api/announcements', announcementRoutes);
+  app.use('/api/ai', aiRoutes);
 
   // Health check endpoint
   app.get('/api/health', (req, res) => {
