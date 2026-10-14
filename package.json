@@ -1,0 +1,30 @@
+{
+  "name": "infovarde",
+  "version": "1.0.0",
+  "description": "Digital Signage & Humanitarian Lifeline Platform inspired by Pintomind/Infoskjermen",
+  "type": "module",
+  "scripts": {
+    "server": "node src/server/index.js",
+    "client": "vite",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "build": "vite build",
+    "seed": "node src/server/seed.js",
+    "test": "node --test src/test/**/*.test.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "lucide-react": "^0.475.0",
+    "qrcode": "^1.5.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^7.1.5",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.2",
+    "vite": "^6.1.0"
+  }
+}
