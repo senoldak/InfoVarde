@@ -61,3 +61,11 @@ class SSEManager {
 }
 
 export const sseManager = new SSEManager();
+
+export function broadcastToChannel(channelCode, event, data) {
+  return sseManager.broadcast(channelCode, event, data);
+}
+
+export function broadcastAll(event, data) {
+  return sseManager.broadcastAll(event, data);
+}

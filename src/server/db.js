@@ -29,7 +29,7 @@ export function getDb(customPath = null) {
   // Enable foreign keys
   db.exec('PRAGMA foreign_keys = ON;');
   
-  if (!customPath) {
+  if (!customPath || !dbInstance) {
     dbInstance = db;
   }
 

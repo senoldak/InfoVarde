@@ -9,6 +9,9 @@ import { initDatabase } from './db.js';
 import channelRoutes from './routes/channels.js';
 import announcementRoutes from './routes/announcements.js';
 import aiRoutes from './routes/ai.js';
+import lifelineRoutes from './routes/lifeline.js';
+import { setupWebRtcSignaling } from './webrtcSignaling.js';
+import { cleanupExpiredSessions } from './db.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,10 +25,21 @@ export function createServer() {
   // Ensure database initialized
   initDatabase();
 
+  // Periodic GDPR ephemeral session cleanup (unref so it doesn't block exits)
+  const cleanupTimer = setInterval(() => {
+    try {
+      cleanupExpiredSessions();
+    } catch {
+      // ignore
+    }
+  }, 10 * 60 * 1000);
+  cleanupTimer.unref();
+
   // API Routes
   app.use('/api/channels', channelRoutes);
   app.use('/api/announcements', announcementRoutes);
   app.use('/api/ai', aiRoutes);
+  app.use('/api/lifeline', lifelineRoutes);
 
   // Health check endpoint
   app.get('/api/health', (req, res) => {
@@ -38,7 +52,17 @@ export function createServer() {
   });
 
   const server = http.createServer(app);
-  return { app, server };
+  const signaling = setupWebRtcSignaling(server);
+
+  return {
+    app,
+    server,
+    wss: signaling.wss,
+    close: () => {
+      server.close();
+      signaling.close();
+    }
+  };
 }
 
 // Start standalone if executed directly
