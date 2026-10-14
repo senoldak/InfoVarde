@@ -64,8 +64,19 @@ export function setupWebRtcSignaling(server) {
 
         const roomSet = rooms.get(currentRoom);
 
-        // Relay signaling messages (offer, answer, ice-candidate, hangup)
-        if (['offer', 'answer', 'ice-candidate', 'hangup'].includes(type)) {
+        // Relay signaling messages (offer, answer, ice-candidate, hangup, call-request, call-accepted, call-rejected, chat-message)
+        const allowedTypes = [
+          'offer',
+          'answer',
+          'ice-candidate',
+          'hangup',
+          'call-request',
+          'call-accepted',
+          'call-rejected',
+          'chat-message'
+        ];
+
+        if (allowedTypes.includes(type)) {
           for (const peer of roomSet) {
             if (peer !== ws && peer.readyState === WebSocket.OPEN) {
               peer.send(JSON.stringify({
@@ -73,7 +84,9 @@ export function setupWebRtcSignaling(server) {
                 room: currentRoom,
                 fromRole: clientRole,
                 sdp,
-                candidate
+                candidate,
+                payload: data.payload,
+                message: data.message
               }));
             }
           }
